@@ -1,0 +1,9 @@
+PyYAML==5.1.1
+requests==2.22.0
+tornado==6.0.3
+psycopg2-binary==2.8.4
+pandas==0.24.2
+pystan==2.19.0.0
+prometheus-client==0.7.1
+fbprophet==0.5
+
