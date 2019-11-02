@@ -1,6 +1,5 @@
 import json
 import psycopg2
-import sqlalchemy
 
 from psycopg2.pool import SimpleConnectionPool
 from psycopg2.extras import RealDictCursor, execute_batch
