@@ -41,9 +41,6 @@ class DbController(object):
                 port = self.port,
                 database = self.database)
 
-            if(self.conn_pool):
-                print("Connection pool created successfully")
-
         except (Exception, psycopg2.Error) as error :
             print ("Error while connecting to PostgreSQL", error)
 

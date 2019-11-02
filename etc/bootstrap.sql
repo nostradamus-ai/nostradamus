@@ -43,7 +43,6 @@ comment on column forecast.yhat is 'Forecast';
 comment on column forecast.yhat_lower is 'Lower margin of the Forecast';
 comment on column forecast.yhat_upper is 'Upper margin of the Forecast';
 
---create extension hstore;
 create table train_data
 (
     id serial primary key,
@@ -51,11 +50,13 @@ create table train_data
     status varchar(32) not null default 'NEW'
         check (status in ('NEW','RUNNING','FINISHED','ERROR')),
     created_time timestamp with time zone not null default (now() at time zone 'utc'),
+    updated_time timestamp with time zone,
     data text,
     FOREIGN KEY (job_id) REFERENCES job(id)
 );
 comment on column train_data.status is 'Status of forecasting timeseries. Available options: NEW, RUNNING, FINISHED, ERROR';
 comment on column train_data.created_time is 'Time when series were loaded';
+comment on column train_data.updated_time is 'Time when task was updated';
 comment on column train_data.data is 'Values of historic timeseries';
 
-insert into job values (default,'http://n9s-ps/','some_metric',null,'1d','10m','NEW',null,null);
+--insert into job values (default,'http://n9s-ps/','some_metric',null,'1d','10m','NEW',null,null);

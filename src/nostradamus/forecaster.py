@@ -4,7 +4,6 @@ import pandas as pd
 from datetime import datetime
 
 from nostradamus.models.prophet import Prophet
-from nostradamus.database.postgres import DbController
 from nostradamus.database.jobcontroller import JobController
 from nostradamus.database.forecastcontroller import ForecastController
 from nostradamus.database.traindatacontroller import TrainDataController
@@ -12,16 +11,7 @@ from nostradamus.database.traindatacontroller import TrainDataController
 class Forecaster(object):
     """ TBD """
 
-    def __init__(self):
-        db = DbController(user='postgres',
-                          password='n9s-pgpass',
-                          host='localhost',
-                          port=5432,
-                          database='postgres',
-                          pool_max_size=2)   
-        if db.ping() == 0:
-            print ("Forecaster: Ping OK")
-
+    def __init__(self, db):
         self.job_ctrl = JobController(db)
         self.traindata_ctrl = TrainDataController(db)
         self.forecast_ctrl = ForecastController(db)
@@ -33,7 +23,7 @@ class Forecaster(object):
 
         _error, _data = self.traindata_ctrl.get()
         if _error == -1:
-            print('No active tasks')            
+            print('Forecaster: No active tasks')            
             return
         elif _error == -2:
             print('Failed to get tasks')
@@ -41,18 +31,17 @@ class Forecaster(object):
 
         rec_id = _data['id']
         job_id = _data['job_id']
-        data = _data['data']
+        data = json.loads(_data['data'])
 
         self.traindata_ctrl.update(rec_id, status='RUNNING')
 
         # get job attributes
         job = self.job_ctrl.get_job_by_id(job_id)
 
-        # get preloaded data for futher training
-        data = json.loads(data)
+        # get preloaded data for futher training    
         for item in data:
             labels = item
-            df = pd.DataFrame.from_dict(data[item])           
+            df = pd.DataFrame.from_dict(data[item])
         df.columns = ['ds','y']
         df['ds'] = pd.to_datetime(df['ds'], unit='s')
 
@@ -73,9 +62,15 @@ class Forecaster(object):
         # save forecast into database
         try:
             self.forecast_ctrl.save_forecast_bulk(args)
-            self.traindata_ctrl.update(rec_id, status='FINISHED')
+            self.traindata_ctrl.update(rec_id, 
+                status='FINISHED',
+                updated_time='now()'
+            )
         except Exception as e:
-            self.traindata_ctrl.update(rec_id, status='ERROR')
+            self.traindata_ctrl.update(rec_id, 
+                status='ERROR',
+                updated_time='now()'            
+            )
             print(f'Save forecast failed: {e}')
 
         #self.job_ctrl.update_job(task.id, status='RUNNING', last_run='now()')

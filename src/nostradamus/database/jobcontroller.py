@@ -14,16 +14,16 @@ class JobController(object):
     def get_job_by_id(self, 
                       job_id):
         """ TBD """
-        try:
-            query = "SELECT id, prometheus_url, metric, query_filter, \
-                forecast_horizon, forecast_frequency, status, \
-                to_char(last_run,'yyyy/mm/dd hh24:mi:ss') as last_run, \
-                to_char(next_run,'yyyy/mm/dd hh24:mi:ss') as next_run, \
-                last_run_duration \
-             FROM job \
-            WHERE id = %(id)s \
-            LIMIT 1;"
+        query = "SELECT id, prometheus_url, metric, query_filter, \
+            forecast_horizon, forecast_frequency, status, \
+            to_char(last_run,'yyyy/mm/dd hh24:mi:ss') as last_run, \
+            to_char(next_run,'yyyy/mm/dd hh24:mi:ss') as next_run, \
+            last_run_duration \
+            FROM job \
+        WHERE id = %(id)s \
+        LIMIT 1;"
 
+        try:
             args = { 'id': job_id }
             result = self.db_controller.select(query, args)
             print(result)
@@ -50,20 +50,20 @@ class JobController(object):
 
     def get_job(self):
         """ TBD """
-        try:
-            query = "SELECT id, prometheus_url, metric, query_filter, \
-                forecast_horizon, forecast_frequency, status, \
-                to_char(last_run,'yyyy/mm/dd hh24:mi:ss') as last_run, \
-                to_char(next_run,'yyyy/mm/dd hh24:mi:ss') as next_run, \
-                last_run_duration \
-             FROM job \
-            WHERE status IN ('NEW','FINISHED') \
-                AND coalesce(next_run, \
-                             null, \
-                             now() - interval '1' second ) < now() \
-            ORDER BY next_run ASC \
-            LIMIT 1;"
+        query = "SELECT id, prometheus_url, metric, query_filter, \
+            forecast_horizon, forecast_frequency, status, \
+            to_char(last_run,'yyyy/mm/dd hh24:mi:ss') as last_run, \
+            to_char(next_run,'yyyy/mm/dd hh24:mi:ss') as next_run, \
+            last_run_duration \
+            FROM job \
+        WHERE status IN ('NEW','FINISHED') \
+            AND coalesce(next_run, \
+                            null, \
+                            now() - interval '1' second ) < now() \
+        ORDER BY next_run ASC \
+        LIMIT 1;"
 
+        try:
             # get data from db and create a new job instance
             result = self.db_controller.select(query, args=None)
             if (result):
@@ -86,6 +86,44 @@ class JobController(object):
         except Exception as error :
             print ("Error", error)
             return -1
+
+
+    def get_finished_jobs(self):
+        """ TBD """
+        query="SELECT j.id, d.status, \
+            to_char( \
+                max(d.updated_time), \
+                'yyyy/mm/dd hh24:mi:ss' \
+            ) as updated_time, \
+            to_char( \
+                max(f.ds_to) - interval '10' minute, \
+                'yyyy/mm/dd hh24:mi:ss' \
+            ) as next_time, \
+            extract( \
+                epoch from max(d.updated_time) - j.last_run \
+            )::int as run_duration \
+        FROM job j \
+            LEFT JOIN train_data d ON j.id = d.job_id \
+            LEFT JOIN forecast f on j.id = f.job_id \
+        WHERE j.status = 'RUNNING' \
+            AND NOT EXISTS \
+            (SELECT 1 FROM train_data d \
+                WHERE d.job_id = j.id \
+                    AND d.status not in ('FINISHED','ERROR')) \
+        GROUP BY j.id, d.status;"
+        
+        try:
+            # Get already finished job tasks
+            result = self.db_controller.select(query, args=None)
+            if (result):
+                return 0, result
+            else:
+                return -1, None
+
+        except Exception as error :
+            print ("Error", error)
+            return -2, None
+
 
     
     def update_job(self,

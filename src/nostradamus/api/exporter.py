@@ -1,9 +1,7 @@
 import json 
-import time
 import logging
 import tornado.web
 
-from nostradamus.database.postgres import DbController
 from nostradamus.database.forecastcontroller import ForecastController
 
 from prometheus_client import generate_latest
@@ -13,16 +11,7 @@ from prometheus_client.core import CounterMetricFamily, HistogramMetricFamily
 class Collector(object):
     """ Worker class """
 
-    def __init__(self):
-        db = DbController(user='postgres',
-                          password='n9s-pgpass',
-                          host='localhost',
-                          port=5432,
-                          database='postgres',
-                          pool_max_size=2)   
-        if db.ping() == 0:
-            print ("Exporter: Ping OK")
-
+    def __init__(self, db):
         self.forecast_ctrl = ForecastController(db)
 
 
@@ -36,6 +25,10 @@ class Collector(object):
         metrics = []
         try:
             _error, forecast = self.forecast_ctrl.get_forecast()
+            if _error != 0:
+                print(f'Error get_forecast. {_error}')
+                return
+
             for item in forecast:
                 metric = item['metric']
                 yhat = item['yhat']
@@ -102,12 +95,9 @@ class MetricHandler(tornado.web.RequestHandler):
         self.obj = ref_object
 
     def get(self):
-        #start = time.clock()
         self.obj.collect()
         value = self.obj.generate_latest_scrape()
         self.write(value)
-        #end = time.clock()
-        #self.logger.info("Scraped in %.2gs" % (end-start))        
 
     def on_finish(self):
         self.obj = None
