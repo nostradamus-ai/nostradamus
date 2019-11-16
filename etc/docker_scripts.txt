@@ -4,5 +4,10 @@ docker run -d -p 5432:5432 --network n9s-net -e POSTGRES_PASSWORD=n9s-pgpass -v 
 connect to postgres:
 docker run -it --rm --network n9s-net postgres:12.0 psql -h n9s-pg -U postgres
 
-create prometheus
-docker run -d -v n9s-prometheus:/prometheus-data --net n9s-net -p 9090:9090 --name n9s-ps prom/prometheus:latest
+create prometheus:
+docker run -d -v n9s-prometheus:/prometheus-data \
+-v /Users/sergeykudrenko/git/nostradamus/etc/prom.yaml:/etc/prometheus/prometheus.yml \
+--net n9s-net -p 9090:9090 --name n9s-ps prom/prometheus:latest
+
+start node-exporter:
+docker run -d --net n9s-net -p 9100:9100 --name n9s-node prom/node-exporter:latest

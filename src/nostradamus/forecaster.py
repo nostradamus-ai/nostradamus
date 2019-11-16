@@ -50,8 +50,16 @@ class Forecaster(object):
             train_df=df,
             forecast_horizon=job.forecast_horizon,
             forecast_frequency=job.forecast_frequency
-        )
-        forecast = model.forecast()
+        )        
+        _error, forecast = model.predict()
+        
+        if _error != 0:
+            self.traindata_ctrl.update(rec_id, 
+                status='ERROR',
+                updated_time='now()'            
+            )
+            print(f'Prediction was failed')
+            return
 
         #prepare dict of params for bulk insert
         for item in forecast:

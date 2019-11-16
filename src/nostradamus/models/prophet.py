@@ -12,12 +12,10 @@ class Prophet(object):
                  train_df,
                  forecast_horizon,
                  forecast_frequency):
+        self._failed = False
         self.train_df = train_df
         self.forecast_horizon = forecast_horizon
         self.forecast_frequency = forecast_frequency
-
-        self.model = fbprophet.Prophet()
-        self.model.fit(train_df)
 
         #calculate frequency in pandas format
         self.freq_value, self.freq_unit=self.calcUnit(self.forecast_frequency)            
@@ -28,13 +26,41 @@ class Prophet(object):
             self.forecast_horizon
         )        
         print(f'Periods:{self.periods},Freq:{self.freq_value}{self.freq_unit}')
-        self.future = self.model.make_future_dataframe(
-            periods=self.periods,
-            freq=self.freq_value+self.freq_unit
-        )        
 
+        # Choose proper growth function
+        # In case of y values are below 1 then use logistic
+        # Cap is max value +10% but not less than 1
+        # Floor is min value -10%
+        floor, cap = 0, 1
+        max_val = float(self.train_df['y'].max())
+        if max_val <= 1:
+            cap = max(max_val * 1.1, 1)
+            floor = float(self.train_df['y'].min()) * 0.9
+            p_growth = 'logistic'
+            self.train_df['cap'] = cap
+            self.train_df['floor'] = floor
+        else:
+            p_growth = 'linear'                
+        print(f'growth function: {p_growth}')
+        print(self.train_df.head(30))
+        try:
+            self.model = fbprophet.Prophet(growth=p_growth)
+            self.model.fit(self.train_df)
+            self.future = self.model.make_future_dataframe(
+                periods=self.periods,
+                freq=self.freq_value+self.freq_unit
+            )
+            self.future['cap'] = cap
+            self.future['floor'] = floor
+                
+        except Exception as e:
+            print(f'ERROR: {e}')            
+            self._failed = True
+       
 
-    def forecast(self):
+    def predict(self):
+        if self._failed:
+            return -1, None
         try:
             data = self.model.predict(self.future)
 
@@ -62,10 +88,10 @@ class Prophet(object):
                 'yhat_lower',
                 'yhat_upper']].to_dict(orient='records')  
 
-            return forecast
+            return 0, forecast
         except Exception as e:
             print(f'Forecast failed: {e}')
-
+            return -2, None
 
     @staticmethod
     def calcUnit(frequency):

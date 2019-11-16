@@ -1,7 +1,7 @@
 import time
 import json
 import requests
-from nostradamus.external import utils, constant
+from nostradamus.external import constant
 
 
 class Client(object):
