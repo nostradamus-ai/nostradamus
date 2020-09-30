@@ -1,8 +1,11 @@
 import time
 import json
+import logging
 import requests
+
 from nostradamus.external import constant
 
+logger = logging.getLogger('external.prometheus')
 
 class Client(object):
     """ TBD """
@@ -23,17 +26,22 @@ class Client(object):
                  url,
                  params):
         """ TBD """
+        result = []
+
         try:
             resp = requests.get(url=url, params=params, timeout=10)             
-            resp.raise_for_status()
+            #resp.raise_for_status()
             if resp.status_code==200:
                 resp = resp.json()
                 if resp['status']=='success':
-                    return resp['data']['result']
+                    result = resp['data']['result']
+                    return 0, result
             else:
-                return -1
+                logger.error(f'http_get {result}')
+                return -1, result
         except Exception as e:
-            print (f'Exception: {e}')
+            logger.error(f'Failed to execute "http_get method": {e}')
+            return -1, result
 
 
     def getKeys(self):
@@ -48,13 +56,16 @@ class Client(object):
             metric = self.metric
 
         payload = {"query":metric}
-        keys = self.http_get(api_url, payload)
-        for key in keys:
-            # remove __name__ from the list of labels
-            del key['metric']['__name__']
-            values.append(key['metric'])
-        
-        return values
+        error, keys = self.http_get(api_url, payload)
+        print(f'{error}: {keys}')
+        if error == 0:
+            for key in keys:
+                # remove __name__ from the list of labels
+                del key['metric']['__name__']
+                values.append(key['metric'])
+            return 0, values
+        else:
+            return -1, values
 
 
     def getSeries(self):
@@ -65,7 +76,11 @@ class Client(object):
 
         api_url = self.prometheus_url + constant.API_QUERY_RANGE_ENDPOINT        
 
-        keys = self.getKeys()
+        error, keys = self.getKeys()
+        if error != 0:
+            logger.error('Failed to get keys for a metric')
+            return error, None
+
         for key in keys:
             # convert dict to promql filter format
             query = ''  
@@ -79,12 +94,15 @@ class Client(object):
                 "start": start_time, 
                 "end": current_time
             }
-            data = self.http_get(api_url, payload)
-            #make a dict of [metric_labels: dict of metric values]
-            for item in data:
-                series.append( {query: item['values']} )
-        
-        return(series)
+            error, data = self.http_get(api_url, payload)
+            if error == 0:
+                #make a dict of [metric_labels: dict of metric values]
+                for item in data:
+                    series.append( {query: item['values']} )
+                
+                return 0, series
+            else:
+                return -1, series
 
 
     @staticmethod

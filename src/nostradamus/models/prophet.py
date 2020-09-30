@@ -1,9 +1,11 @@
 import math
+import logging
 import fbprophet
 import pandas as pd
 
 from datetime import datetime, timedelta
 
+logger = logging.getLogger('models.prophet')
 
 class Prophet(object):
     """ TBD """
@@ -24,8 +26,10 @@ class Prophet(object):
         self.periods = self.calcPeriods(
             self.forecast_frequency,
             self.forecast_horizon
-        )        
-        print(f'Periods:{self.periods},Freq:{self.freq_value}{self.freq_unit}')
+        )
+        logger.debug(
+            f'Periods:{self.periods},Freq:{self.freq_value}{self.freq_unit}'
+        )    
 
         # Choose proper growth function
         # In case of y values are below 1 then use logistic
@@ -40,9 +44,10 @@ class Prophet(object):
             self.train_df['cap'] = cap
             self.train_df['floor'] = floor
         else:
-            p_growth = 'linear'                
-        print(f'growth function: {p_growth}')
-        print(self.train_df.head(30))
+            p_growth = 'linear'
+        logger.debug(f'growth function: {p_growth}')
+        logger.debug(self.train_df.head(30))         
+
         try:
             self.model = fbprophet.Prophet(growth=p_growth)
             self.model.fit(self.train_df)
@@ -54,7 +59,7 @@ class Prophet(object):
             self.future['floor'] = floor
                 
         except Exception as e:
-            print(f'ERROR: {e}')            
+            logger.error(f'Failed to create/fit model: {e}')           
             self._failed = True
        
 
@@ -90,8 +95,9 @@ class Prophet(object):
 
             return 0, forecast
         except Exception as e:
-            print(f'Forecast failed: {e}')
+            logger.error(f'Forecast failed with: {e}')
             return -2, None
+
 
     @staticmethod
     def calcUnit(frequency):
@@ -129,7 +135,9 @@ class Prophet(object):
             periods = math.ceil(hor_val / freq_val)
 
         else:
-            print('invalid input horizon and frequency parameters specified')
+            logger.error(
+                'Invalid input horizon and frequency parameters specified'
+            )
             periods = -1
 
         return periods

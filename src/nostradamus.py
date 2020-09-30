@@ -1,5 +1,6 @@
 import os
 import time
+import logging
 import tornado.web
 import tornado.ioloop
 
@@ -11,6 +12,9 @@ from nostradamus.forecaster import Forecaster
 from nostradamus.database.postgres import DbController
 from nostradamus.api.exporter import Collector, MetricHandler
 
+logging.basicConfig(level=logging.DEBUG,
+    format='%(asctime)s %(levelname)s [%(name)s] %(message)s')
+logger = logging.getLogger('nostradamus')
 
 def get_config(config_name,
                default_value):
@@ -41,7 +45,7 @@ if __name__ == "__main__":
                       database=pg_db,
                       pool_max_size=pg_pool)   
     if db.ping() == 0:
-        print ("Database connection pool initialized successfully")
+        logger.info("Database connection pool initialized successfully")
 
     if work_mode == 'WORKER':
         while True:
@@ -66,4 +70,5 @@ if __name__ == "__main__":
         ])
 
         application.listen(9345)
+        logger.info("Starting Nostradamus metric exporter")        
         tornado.ioloop.IOLoop.instance().start()

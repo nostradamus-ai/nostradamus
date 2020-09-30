@@ -1,4 +1,7 @@
 import json
+import logging
+
+logger = logging.getLogger('database.forecastcontroller')
 
 class ForecastController(object):
     """ TBD """
@@ -28,7 +31,7 @@ class ForecastController(object):
                 return -1, None
 
         except Exception as error :
-            print ("Error", error)
+            logger(f'Failed to execute "get_forecast" method: {error}')
             return -1, None
 
 
@@ -41,5 +44,5 @@ class ForecastController(object):
             %(yhat)s, %(yhat_lower)s, %(yhat_upper)s);"
         try:
             self.db_controller.insert_bulk(query, forecast)
-        except Exception as e:
-            print(e)
+        except Exception as error:
+            logger(f'Failed to execute "save_forecast_bulk" method: {error}')

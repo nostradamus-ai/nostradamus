@@ -1,8 +1,11 @@
 import json
+import logging
 import psycopg2
 
 from psycopg2.pool import SimpleConnectionPool
 from psycopg2.extras import RealDictCursor, execute_batch
+
+logger = logging.getLogger('database.postgres')
 
 class DbController(object):
     """
@@ -41,14 +44,14 @@ class DbController(object):
                 database = self.database)
 
         except (Exception, psycopg2.Error) as error :
-            print ("Error while connecting to PostgreSQL", error)
+            logger.fatal(f'Error connecting to PostgreSQL: {error}')
 
 
     def close(self):
         """ Close database connection pool """
         if (self.conn_pool):
             self.conn_pool.closeall
-        print("PostgreSQL connection pool is closed")
+        logger.info('PostgreSQL connection pool is closed')
 
 
     def ping(self):
@@ -64,8 +67,8 @@ class DbController(object):
             self.conn_pool.putconn(conn)
             return 0
 
-        except (Exception, psycopg2.Error) as error :
-            print ("Error while connecting to PostgreSQL", error)
+        except (Exception, psycopg2.Error) as error:
+            logger.error(f'Error connecting to PostgreSQL: {error}')
             return -1
 
 
@@ -84,8 +87,8 @@ class DbController(object):
             # convert to json
             return json.loads(record)
 
-        except (Exception, psycopg2.Error) as error :
-            print ("Error while executing the SELECT query", error)
+        except (Exception, psycopg2.Error) as error:
+            logger.error(f'Error executing the SELECT query: {error}')
             self.conn_pool.putconn(conn)            
             return -1
 
@@ -103,8 +106,8 @@ class DbController(object):
             conn.commit()
             self.conn_pool.putconn(conn)
 
-        except (Exception, psycopg2.Error) as error :
-            print ("Error while executing the INSERT query", error)
+        except (Exception, psycopg2.Error) as error:
+            logger.error(f'Error executing the INSERT query: {error}')
             conn.rollback()
             self.conn_pool.putconn(conn)            
             return -1
@@ -121,8 +124,8 @@ class DbController(object):
             conn.commit()
             self.conn_pool.putconn(conn)
 
-        except (Exception, psycopg2.Error) as error :
-            print ("Error while executing the BULK INSERT query", error)
+        except (Exception, psycopg2.Error) as error:
+            logger.error(f'Error executing BULK INSERT query: {error}')
             conn.rollback()
             self.conn_pool.putconn(conn)
             return -1
@@ -141,8 +144,8 @@ class DbController(object):
             conn.commit()
             self.conn_pool.putconn(conn)
 
-        except (Exception, psycopg2.Error) as error :
-            print ("Error while executing the UPDATE query", error)
+        except (Exception, psycopg2.Error) as error:
+            logger.error(f'Error executing UPDATE query: {error}')
             conn.rollback()
             self.conn_pool.putconn(conn)            
             return -1

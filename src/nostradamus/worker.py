@@ -1,10 +1,13 @@
 import os
+import logging
+
 from datetime import datetime
 
 from nostradamus.database.jobcontroller import JobController
 from nostradamus.database.traindatacontroller import TrainDataController
 from nostradamus.external.prometheus import Client as PrometheusClient
 
+logger = logging.getLogger('worker')
 
 class Worker(object):
     """ Worker class """
@@ -26,14 +29,14 @@ class Worker(object):
                         next_run=job['next_time'],
                         last_run_duration=job['run_duration']
                     )            
-        except Exception as e:           
-            print(f'Job cleanup failed with {e}')
+        except Exception as e:
+            logger.error(f'Job cleanup failed with {e}')
 
         task = self.job_ctrl.get_job()
         if (task!=-1):
-            print(f'current job status: {task.status}')
+            logger.debug(f'current job status: {task.status}')
         else:
-            print('Worker: No active tasks')
+            logger.info('No active tasks')
             return
 
         #current_time = datetime.utcnow().strftime("%Y/%m/%d %H:%M%:%S")
@@ -43,7 +46,10 @@ class Worker(object):
                                       task.query_filter,
                                       task.forecast_horizon,
                                       task.forecast_frequency)
-        series = api_client.getSeries()
-        self.traindata_ctrl.insert(task.id, series)
+        error, series = api_client.getSeries()
+        if error == 0:
+            self.traindata_ctrl.insert(task.id, series)
+        else:
+            logger.error(f'Failed to get series from prometheus')
     
         #self.job_ctrl.update_job(task.id, status='FINISHED')

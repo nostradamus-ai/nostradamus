@@ -1,4 +1,7 @@
+import logging
 from nostradamus.job import Job
+
+logger = logging.getLogger('database.jobcontroller')
 
 class JobController(object):
     def __init__(self,
@@ -44,7 +47,7 @@ class JobController(object):
             else:
                 return -1
         except Exception as error :
-            print ("Error", error)
+            logger(f'Failed to execute "get_job_by_id" method: {error}')
             return -1        
 
 
@@ -84,7 +87,7 @@ class JobController(object):
                 return -1
 
         except Exception as error :
-            print ("Error", error)
+            logger(f'Failed to execute "get_job" method: {error}')
             return -1
 
 
@@ -121,7 +124,7 @@ class JobController(object):
                 return -1, None
 
         except Exception as error :
-            print ("Error", error)
+            logger(f'Failed to execute "get_finished_jobs" method: {error}')
             return -2, None
 
 
@@ -142,8 +145,8 @@ class JobController(object):
 
         try:
             self.db_controller.update(query, values)
-        except Exception as e:
-            print(e)
+        except Exception as error:
+            logger(f'Failed to execute "update_job" method: {error}')
 
 
     def insert_job(self):

@@ -1,4 +1,7 @@
 import json
+import logging
+
+logger = logging.getLogger('database.traindatacontroller')
 
 class TrainDataController(object):
     """ TBD """
@@ -29,8 +32,8 @@ class TrainDataController(object):
             else:
                 return -1, None
 
-        except Exception as error :
-            print ("Error", error)
+        except Exception as error:
+            logger.error(f'Failed to execute "get" method: {error}')
             return -2, None
 
 
@@ -48,7 +51,7 @@ class TrainDataController(object):
                     json.dumps(s)
                 )
         except Exception as e:
-            print(e)
+            logger.error(f'Failed to execute "insert" method: {e}')
 
 
     def update(self,
@@ -63,9 +66,8 @@ class TrainDataController(object):
         set_str = set_str[:-2]
 
         query = f'UPDATE train_data SET {set_str} WHERE id = {id};'
-        print(f'{query} WITH {values}')
 
         try:
             self.db_controller.update(query, values)
         except Exception as e:
-            print(e)
+            logger.error(f'Failed to execute "update" method: {e}')

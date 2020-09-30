@@ -1,5 +1,6 @@
 import os
 import json
+import logging
 import pandas as pd
 from datetime import datetime
 
@@ -7,6 +8,8 @@ from nostradamus.models.prophet import Prophet
 from nostradamus.database.jobcontroller import JobController
 from nostradamus.database.forecastcontroller import ForecastController
 from nostradamus.database.traindatacontroller import TrainDataController
+
+logger = logging.getLogger('forecaster')
 
 class Forecaster(object):
     """ TBD """
@@ -23,10 +26,10 @@ class Forecaster(object):
 
         _error, _data = self.traindata_ctrl.get()
         if _error == -1:
-            print('Forecaster: No active tasks')            
+            logger.info('No active tasks')          
             return
         elif _error == -2:
-            print('Failed to get tasks')
+            logger.error('Failed to get tasks')
             return
 
         rec_id = _data['id']
@@ -58,7 +61,7 @@ class Forecaster(object):
                 status='ERROR',
                 updated_time='now()'            
             )
-            print(f'Prediction was failed')
+            logger.error('Prediction failed')
             return
 
         #prepare dict of params for bulk insert
@@ -79,7 +82,7 @@ class Forecaster(object):
                 status='ERROR',
                 updated_time='now()'            
             )
-            print(f'Save forecast failed: {e}')
+            logger.error(f'Save forecast failed: {e}')
 
         #self.job_ctrl.update_job(task.id, status='RUNNING', last_run='now()')
         #self.traindata_ctrl.saveSeries(task.id, series)
