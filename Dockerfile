@@ -1,12 +1,12 @@
-FROM python:3.7
+FROM python:3.8
 
 COPY src/. /usr/src/nostradamus/
 WORKDIR /usr/src/nostradamus
 COPY requirements.txt .
 
 RUN \
- pip3 install --upgrade pip && \
- pip3 install -r requirements.txt --no-cache-dir && \
+ python3 -m pip install --upgrade pip && \
+ python3 -m pip install -r requirements.txt --no-cache-dir && \
  rm requirements.txt
 
 EXPOSE 9345

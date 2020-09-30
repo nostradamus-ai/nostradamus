@@ -4,6 +4,7 @@ import tornado.web
 import tornado.ioloop
 
 from prometheus_client.core import REGISTRY
+from prometheus_client import PROCESS_COLLECTOR,PLATFORM_COLLECTOR,GC_COLLECTOR
 
 from nostradamus.worker import Worker
 from nostradamus.forecaster import Forecaster
@@ -54,6 +55,11 @@ if __name__ == "__main__":
     else:
         REGISTRY.register(Collector(db))
         exporter = Collector(db)
+
+        # Unregister default metrics
+        REGISTRY.unregister(PROCESS_COLLECTOR)
+        REGISTRY.unregister(PLATFORM_COLLECTOR)
+        REGISTRY.unregister(GC_COLLECTOR)  
 
         application = tornado.web.Application([
             (r"/metrics", MetricHandler, {"ref_object": exporter})

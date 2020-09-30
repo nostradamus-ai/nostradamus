@@ -37,16 +37,16 @@ class Collector(object):
 
                 _labels, _values = self.labels_str2dict(item['metric_labels'])
 
-                m_yhat = GaugeMetricFamily(f'n9s_prediction_{metric}',
+                m_yhat = GaugeMetricFamily(f'n9s_yhat_{metric}',
                     'YHAT. Mean value of the prediction',
                     labels=_labels
                 )
-                m_yhat_lower = GaugeMetricFamily(f'n9s_bottom_{metric}',
-                    'YHAT Lower. The lowest value of uncertainty interval',
+                m_yhat_lower = GaugeMetricFamily(f'n9s_yhat_lower_{metric}',
+                    'YHAT Lower. The low value of uncertainty interval',
                     labels=_labels
                 )
-                m_yhat_upper = GaugeMetricFamily(f'n9s_top_{metric}',
-                    'YHAT Upper. The highest value of uncertainty interval',
+                m_yhat_upper = GaugeMetricFamily(f'n9s_yhat_upper_{metric}',
+                    'YHAT Upper. The high value of uncertainty interval',
                     labels=_labels
                 )                                        
                 m_yhat.add_metric(_values, yhat)
