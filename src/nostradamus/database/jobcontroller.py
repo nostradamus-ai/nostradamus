@@ -8,13 +8,13 @@ class JobController(object):
                  db_controller):
         self.db_controller = db_controller
 
-    
+
     def get_next_job_id(self):
         """ TBD """
         pass
 
 
-    def get_job_by_id(self, 
+    def get_job_by_id(self,
                       job_id):
         """ TBD """
         query = "SELECT id, prometheus_url, metric, query_filter, \
@@ -29,7 +29,7 @@ class JobController(object):
         try:
             args = { 'id': job_id }
             result = self.db_controller.select(query, args)
-            print(result)
+            logger.debug(f'Query result: {result}')
             if (result):
                 for row in result:
                     job = Job(id = row['id'],
@@ -48,7 +48,7 @@ class JobController(object):
                 return -1
         except Exception as error :
             logger(f'Failed to execute "get_job_by_id" method: {error}')
-            return -1        
+            return -1
 
 
     def get_job(self):
@@ -93,7 +93,8 @@ class JobController(object):
 
     def get_finished_jobs(self):
         """ TBD """
-        query="SELECT j.id, d.status, \
+        query="SELECT j.id, \
+            coalesce(d.status,'ERROR','FINISHED') status, \
             to_char( \
                 max(d.updated_time), \
                 'yyyy/mm/dd hh24:mi:ss' \
@@ -114,11 +115,12 @@ class JobController(object):
                 WHERE d.job_id = j.id \
                     AND d.status not in ('FINISHED','ERROR')) \
         GROUP BY j.id, d.status;"
-        
+
         try:
             # Get already finished job tasks
             result = self.db_controller.select(query, args=None)
             if (result):
+                logger.debug(f'[get_finished_jobs]: {result}')
                 return 0, result
             else:
                 return -1, None
@@ -128,7 +130,7 @@ class JobController(object):
             return -2, None
 
 
-    
+
     def update_job(self,
                    job_id,
                    **kwargs):
@@ -141,7 +143,7 @@ class JobController(object):
         set_str = set_str[:-2]
 
         query = f'UPDATE job SET {set_str} WHERE id = {job_id};'
-        print(f'{query} WITH {values}')
+        logger.debug(f'Query: {query}\nBinds: {values}')
 
         try:
             self.db_controller.update(query, values)

@@ -20,8 +20,8 @@ class Client(object):
         self.query_filter = query_filter
         self.forecast_horizon = forecast_horizon
         self.forecast_frequency = forecast_frequency
-    
-    
+
+
     def http_get(self,
                  url,
                  params):
@@ -29,7 +29,7 @@ class Client(object):
         result = []
 
         try:
-            resp = requests.get(url=url, params=params, timeout=10)             
+            resp = requests.get(url=url, params=params, timeout=10)
             #resp.raise_for_status()
             if resp.status_code==200:
                 resp = resp.json()
@@ -74,7 +74,7 @@ class Client(object):
         current_time = int(time.time())
         start_time = current_time - self.calcTimeShift(self.forecast_horizon)
 
-        api_url = self.prometheus_url + constant.API_QUERY_RANGE_ENDPOINT        
+        api_url = self.prometheus_url + constant.API_QUERY_RANGE_ENDPOINT
 
         error, keys = self.getKeys()
         if error != 0:
@@ -83,15 +83,15 @@ class Client(object):
 
         for key in keys:
             # convert dict to promql filter format
-            query = ''  
+            query = ''
             for item in key:
                 query = query + f'{item}="{key[item]}",'
 
             # add additional required parameters for range query
             payload = {
-                "query": self.metric + '{' + query + '}', 
-                "step": self.forecast_frequency, 
-                "start": start_time, 
+                "query": self.metric + '{' + query + '}',
+                "step": self.forecast_frequency,
+                "start": start_time,
                 "end": current_time
             }
             error, data = self.http_get(api_url, payload)
@@ -99,10 +99,15 @@ class Client(object):
                 #make a dict of [metric_labels: dict of metric values]
                 for item in data:
                     series.append( {query: item['values']} )
-                
-                return 0, series
             else:
-                return -1, series
+                logger.error(
+                    f'http_get failed with error {error}. payload: {payload}'
+                )
+
+        if len(series) > 0:
+            return 0, series
+        else:
+            return -1, series
 
 
     @staticmethod
