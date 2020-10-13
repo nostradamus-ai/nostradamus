@@ -19,8 +19,7 @@ class ForecastController(object):
                     f.yhat, f.yhat_lower, f.yhat_upper \
                     FROM forecast f JOIN \
                         job j ON f.job_id = j.id \
-                WHERE now() BETWEEN f.ds_from AND f.ds_to \
-                LIMIT 1;"
+                WHERE now() BETWEEN f.ds_from AND f.ds_to;"
 
             result = self.db_controller.select(query, args=None)
             if (result):
