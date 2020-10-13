@@ -37,12 +37,15 @@ class Prophet(object):
         # Floor is min value -10%
         floor, cap = 0, 1
         max_val = float(self.train_df['y'].max())
-        if max_val <= 1:
+        if max_val == 0:
+            # temporary workaround for https://github.com/facebook/prophet/issues/1032
+            p_growth = 'linear'
+        elif max_val > 0 and max_val <= 1:
             cap = max(max_val * 1.1, 1)
             floor = float(self.train_df['y'].min()) * 0.9
             p_growth = 'logistic'
             self.train_df['cap'] = cap
-            self.train_df['floor'] = floor
+            self.train_df['floor'] = floor        
         else:
             p_growth = 'linear'
         logger.debug(f'growth function: {p_growth}')
