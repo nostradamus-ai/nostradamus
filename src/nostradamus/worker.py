@@ -51,6 +51,7 @@ class Worker(object):
             self.traindata_ctrl.insert(task.id, series)
             self.job_ctrl.update_job(task.id, status='RUNNING')
         else:
+            self.job_ctrl.update_job(task.id, status='ERROR')
             logger.error(f'Failed to get series from prometheus')
     
         #self.job_ctrl.update_job(task.id, status='FINISHED')
