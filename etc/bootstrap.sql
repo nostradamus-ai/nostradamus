@@ -9,7 +9,7 @@ create table job
     forecast_frequency varchar(4) not null check 
         (forecast_frequency in ('5m','10m','1h','3h','1d')),
     status varchar(32) not null check 
-        (status in ('NEW','RUNNING','ERROR','FINISHED','DISABLED')),
+        (status in ('FETCHING','NEW','RUNNING','ERROR','FINISHED','DISABLED')),
     last_run timestamp with time zone default null,
     next_run timestamp with time zone default null,
     last_run_duration integer
@@ -19,10 +19,10 @@ comment on column job.metric is 'Metric name';
 comment on column job.query_filter is 'PromQL filter query';
 comment on column job.forecast_horizon is 'Horizon of forecast. Available options: 1h, 6h, 12h, 1d, 7d, 30d, 90d, 180d, 365d';
 comment on column job.forecast_frequency is 'Frequency of forecast. Available options: 5m, 10m, 1h, 3h, 1d';
-comment on column job.status is 'Current status of the job. Available options: NEW, RUNNING, ERROR, FINISHED, DISABLED';
+comment on column job.status is 'Current status of the job. Available options: FETCHING, NEW, RUNNING, ERROR, FINISHED, DISABLED';
 comment on column job.last_run is 'Date of job last run';
 comment on column job.next_run is 'Date of job next run';
-comment on column job.last_run_duration is 'Elapsed time of last job execution';
+comment on column job.last_run_duration is 'Elapsed time of last job execution in seconds';
 
 create table forecast
 (

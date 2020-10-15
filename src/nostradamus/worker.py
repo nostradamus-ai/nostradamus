@@ -40,7 +40,7 @@ class Worker(object):
             return
 
         #current_time = datetime.utcnow().strftime("%Y/%m/%d %H:%M%:%S")
-        self.job_ctrl.update_job(task.id, status='RUNNING', last_run='now()')
+        self.job_ctrl.update_job(task.id, status='FETCHING', last_run='now()')
         api_client = PrometheusClient(task.prometheus_url,
                                       task.metric,
                                       task.query_filter,
@@ -49,7 +49,9 @@ class Worker(object):
         error, series = api_client.getSeries()
         if error == 0:
             self.traindata_ctrl.insert(task.id, series)
+            self.job_ctrl.update_job(task.id, status='RUNNING')
         else:
+            self.job_ctrl.update_job(task.id, status='ERROR')
             logger.error(f'Failed to get series from prometheus')
     
         #self.job_ctrl.update_job(task.id, status='FINISHED')
