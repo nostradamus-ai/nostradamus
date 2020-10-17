@@ -43,6 +43,7 @@ class Worker(object):
         api_client = PrometheusClient(task.prometheus_url,
                                       task.metric,
                                       task.query_filter,
+                                      task.range_function,
                                       task.forecast_horizon,
                                       task.forecast_frequency)
         error, series = api_client.getSeries()

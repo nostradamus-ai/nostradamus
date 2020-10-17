@@ -18,10 +18,11 @@ class JobController(object):
                       job_id):
         """ TBD """
         query = "SELECT id, prometheus_url, metric, query_filter, \
+            range_function, optimize_function, \
             forecast_horizon, forecast_frequency, status, \
             to_char(last_run,'yyyy/mm/dd hh24:mi:ss') as last_run, \
             to_char(next_run,'yyyy/mm/dd hh24:mi:ss') as next_run, \
-            last_run_duration \
+            last_run_duration, last_validation \
             FROM job \
         WHERE id = %(id)s \
         LIMIT 1;"
@@ -36,12 +37,15 @@ class JobController(object):
                         prometheus_url = row['prometheus_url'],
                         metric = row['metric'],
                         query_filter = row['query_filter'],
+                        range_function = row['range_function'],
+                        optimize_function = row['optimize_function'],
                         forecast_horizon = row['forecast_horizon'],
                         forecast_frequency = row['forecast_frequency'],
                         status = row['status'],
                         last_run = row['last_run'],
                         next_run = row['next_run'],
-                        last_run_duration = row['last_run_duration']
+                        last_run_duration = row['last_run_duration'],
+                        last_validation = row['last_validation']
                     )
                 return job
             else:
@@ -54,10 +58,11 @@ class JobController(object):
     def get_job(self):
         """ TBD """
         query = "SELECT id, prometheus_url, metric, query_filter, \
+            range_function, optimize_function, \
             forecast_horizon, forecast_frequency, status, \
             to_char(last_run,'yyyy/mm/dd hh24:mi:ss') as last_run, \
             to_char(next_run,'yyyy/mm/dd hh24:mi:ss') as next_run, \
-            last_run_duration \
+            last_run_duration, last_validation \
             FROM job \
         WHERE status IN ('NEW','FINISHED') \
             AND coalesce(next_run, \
@@ -75,12 +80,15 @@ class JobController(object):
                         prometheus_url = row['prometheus_url'],
                         metric = row['metric'],
                         query_filter = row['query_filter'],
+                        range_function = row['range_function'],
+                        optimize_function = row['optimize_function'],
                         forecast_horizon = row['forecast_horizon'],
                         forecast_frequency = row['forecast_frequency'],
                         status = row['status'],
                         last_run = row['last_run'],
                         next_run = row['next_run'],
-                        last_run_duration = row['last_run_duration']
+                        last_run_duration = row['last_run_duration'],
+                        last_validation = row['last_validation']
                     )
                 return job
             else:
