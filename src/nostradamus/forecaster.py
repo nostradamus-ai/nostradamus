@@ -26,7 +26,7 @@ class Forecaster(object):
 
         _error, _data = self.traindata_ctrl.get()
         if _error == -1:
-            logger.info('No active tasks')          
+            logger.info('No active tasks')
             return
         elif _error == -2:
             logger.error('Failed to get tasks')
@@ -41,7 +41,7 @@ class Forecaster(object):
         # get job attributes
         job = self.job_ctrl.get_job_by_id(job_id)
 
-        # get preloaded data for futher training    
+        # get preloaded data for futher training
         for item in data:
             labels = item
             df = pd.DataFrame.from_dict(data[item])
@@ -53,13 +53,13 @@ class Forecaster(object):
             train_df=df,
             forecast_horizon=job.forecast_horizon,
             forecast_frequency=job.forecast_frequency
-        )        
+        )
         _error, forecast = model.predict()
-        
+
         if _error != 0:
-            self.traindata_ctrl.update(rec_id, 
+            self.traindata_ctrl.update(rec_id,
                 status='ERROR',
-                updated_time='now()'            
+                updated_time='now()'
             )
             logger.error('Prediction failed')
             return
@@ -69,20 +69,17 @@ class Forecaster(object):
             item['job_id']=job.id
             item['metric_labels']=labels
             args.append(item)
-        
+
         # save forecast into database
         try:
             self.forecast_ctrl.save_forecast_bulk(args)
-            self.traindata_ctrl.update(rec_id, 
+            self.traindata_ctrl.update(rec_id,
                 status='FINISHED',
                 updated_time='now()'
             )
         except Exception as e:
-            self.traindata_ctrl.update(rec_id, 
+            self.traindata_ctrl.update(rec_id,
                 status='ERROR',
-                updated_time='now()'            
+                updated_time='now()'
             )
             logger.error(f'Save forecast failed: {e}')
-
-        #self.job_ctrl.update_job(task.id, status='RUNNING', last_run='now()')
-        #self.traindata_ctrl.saveSeries(task.id, series)

@@ -30,7 +30,7 @@ class DbController(object):
                 pass
         except:
             self.connect()
-            
+
 
     def connect(self):
         """ Initialize database connection pool """
@@ -89,7 +89,7 @@ class DbController(object):
 
         except (Exception, psycopg2.Error) as error:
             logger.error(f'Error executing the SELECT query: {error}')
-            self.conn_pool.putconn(conn)            
+            self.conn_pool.putconn(conn)
             return -1
 
 
@@ -109,9 +109,9 @@ class DbController(object):
         except (Exception, psycopg2.Error) as error:
             logger.error(f'Error executing the INSERT query: {error}')
             conn.rollback()
-            self.conn_pool.putconn(conn)            
+            self.conn_pool.putconn(conn)
             return -1
-    
+
 
     def insert_bulk(self,
                     query,
@@ -135,7 +135,6 @@ class DbController(object):
                query,
                args):
         try:
-            #params = tuple(arg for arg in args)
             params = args
             conn = self.conn_pool.getconn()
             cursor = conn.cursor()
@@ -147,5 +146,5 @@ class DbController(object):
         except (Exception, psycopg2.Error) as error:
             logger.error(f'Error executing UPDATE query: {error}')
             conn.rollback()
-            self.conn_pool.putconn(conn)            
+            self.conn_pool.putconn(conn)
             return -1

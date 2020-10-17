@@ -23,12 +23,12 @@ class Worker(object):
             _error, jobs_to_finish = self.job_ctrl.get_finished_jobs()
             if _error == 0:
                 for job in jobs_to_finish:
-                    self.job_ctrl.update_job(job['id'], 
+                    self.job_ctrl.update_job(job['id'],
                         status=job['status'],
                         last_run=job['updated_time'],
                         next_run=job['next_time'],
                         last_run_duration=job['run_duration']
-                    )            
+                    )
         except Exception as e:
             logger.error(f'Job cleanup failed with {e}')
 
@@ -39,7 +39,6 @@ class Worker(object):
             logger.info('No active tasks')
             return
 
-        #current_time = datetime.utcnow().strftime("%Y/%m/%d %H:%M%:%S")
         self.job_ctrl.update_job(task.id, status='FETCHING', last_run='now()')
         api_client = PrometheusClient(task.prometheus_url,
                                       task.metric,
@@ -53,5 +52,3 @@ class Worker(object):
         else:
             self.job_ctrl.update_job(task.id, status='ERROR')
             logger.error(f'Failed to get series from prometheus')
-    
-        #self.job_ctrl.update_job(task.id, status='FINISHED')
