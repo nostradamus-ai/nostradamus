@@ -1,33 +1,43 @@
+drop table job CASCADE;
+
 create table job
 (
     id serial primary key,
     prometheus_url varchar(255) not null,
     metric varchar(255) not null,
     query_filter varchar(512),
-    forecast_horizon varchar(4) not null check 
+    range_function varchar(10) check
+        (upper(range_function) in ('RATE','IRATE','INCREASE')),
+    optimize_function varchar(10) check
+        (upper(optimize_function) in ('MSE','RMSE','MAE','MAPE','MDAPE')),
+    forecast_horizon varchar(4) not null check
         (forecast_horizon in ('1h','6h','12h','1d','7d','30d','90d','180d','365d')),
-    forecast_frequency varchar(4) not null check 
+    forecast_frequency varchar(4) not null check
         (forecast_frequency in ('5m','10m','1h','3h','1d')),
-    status varchar(32) not null check 
+    status varchar(32) not null check
         (status in ('FETCHING','NEW','RUNNING','ERROR','FINISHED','DISABLED')),
     last_run timestamp with time zone default null,
     next_run timestamp with time zone default null,
-    last_run_duration integer
+    last_run_duration integer,
+    last_validation timestamp  with time zone default null
 );
 comment on column job.prometheus_url is 'Prometheus API url with metrics to fetch';
 comment on column job.metric is 'Metric name';
 comment on column job.query_filter is 'PromQL filter query';
+comment on column job.range_function is 'PromQL range function. Use only for counters. Available options: IRATE, RATE, INCREASE';
+comment on column job.optimize_function is 'KPI for hyper parameters tuning. Options: MSE, RMSE, MAE, MAPE, MDAPE. Use wisely';
 comment on column job.forecast_horizon is 'Horizon of forecast. Available options: 1h, 6h, 12h, 1d, 7d, 30d, 90d, 180d, 365d';
 comment on column job.forecast_frequency is 'Frequency of forecast. Available options: 5m, 10m, 1h, 3h, 1d';
 comment on column job.status is 'Current status of the job. Available options: FETCHING, NEW, RUNNING, ERROR, FINISHED, DISABLED';
 comment on column job.last_run is 'Date of job last run';
 comment on column job.next_run is 'Date of job next run';
 comment on column job.last_run_duration is 'Elapsed time of last job execution in seconds';
+comment on column job.last_validation is 'Date of last hyper parameters tuning';
 
 create table forecast
 (
     ds_from timestamp with time zone not null,
-    ds_to timestamp with time zone not null,  
+    ds_to timestamp with time zone not null,
     job_id integer not null,
     metric_labels varchar(512),
     yhat real not null,
@@ -59,4 +69,16 @@ comment on column train_data.created_time is 'Time when series were loaded';
 comment on column train_data.updated_time is 'Time when task was updated';
 comment on column train_data.data is 'Values of historic timeseries';
 
---insert into job values (default,'http://n9s-ps/','some_metric',null,'1d','10m','NEW',null,null);
+insert into job values (
+    default,
+    'http://localhost:9090/',
+    'node_cpu_seconds_total',
+    null,
+    'increase',
+    null,
+    '1h',
+    '5m',
+    'NEW',
+    null,
+    null,
+    null);

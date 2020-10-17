@@ -13,11 +13,13 @@ class Client(object):
                  prometheus_url,
                  metric,
                  query_filter,
+                 range_function,
                  forecast_horizon,
                  forecast_frequency):
         self.prometheus_url = prometheus_url
         self.metric = metric
         self.query_filter = query_filter
+        self.range_function = range_function
         self.forecast_horizon = forecast_horizon
         self.forecast_frequency = forecast_frequency
 
@@ -83,13 +85,18 @@ class Client(object):
 
         for key in keys:
             # convert dict to promql filter format
-            query = ''
+            filters, query = '', ''
             for item in key:
-                query = query + f'{item}="{key[item]}",'
+                filters = filters + f'{item}="{key[item]}",'
+
+            query = self.metric + '{' + filters + '}'
+            # apply rate/increase function to handle counters correctly
+            if self.range_function is not None:
+                query = f'{self.range_function}({query}[{self.forecast_frequency}])'
 
             # add additional required parameters for range query
             payload = {
-                "query": self.metric + '{' + query + '}',
+                "query": query,
                 "step": self.forecast_frequency,
                 "start": start_time,
                 "end": current_time
@@ -98,7 +105,7 @@ class Client(object):
             if error == 0:
                 #make a dict of [metric_labels: dict of metric values]
                 for item in data:
-                    series.append( {query: item['values']} )
+                    series.append( {filters: item['values']} )
             else:
                 logger.error(
                     f'http_get failed with error {error}. payload: {payload}'

@@ -1,4 +1,4 @@
-import json 
+import json
 import logging
 import tornado.web
 
@@ -6,7 +6,6 @@ from nostradamus.database.forecastcontroller import ForecastController
 
 from prometheus_client import generate_latest
 from prometheus_client.core import REGISTRY, GaugeMetricFamily
-from prometheus_client.core import CounterMetricFamily, HistogramMetricFamily
 
 class Collector(object):
     """ Worker class """
@@ -37,25 +36,40 @@ class Collector(object):
 
                 _labels, _values = self.labels_str2dict(item['metric_labels'])
 
-                m_yhat = GaugeMetricFamily(f'n9s_yhat_{metric}',
+                m_yhat = GaugeMetricFamily(f'n9s_{metric}_yhat',
                     'YHAT. Mean value of the prediction',
                     labels=_labels
                 )
-                m_yhat_lower = GaugeMetricFamily(f'n9s_yhat_lower_{metric}',
+                m_yhat_lower = GaugeMetricFamily(f'n9s_{metric}_yhat_lower',
                     'YHAT Lower. The low value of uncertainty interval',
                     labels=_labels
                 )
-                m_yhat_upper = GaugeMetricFamily(f'n9s_yhat_upper_{metric}',
+                m_yhat_upper = GaugeMetricFamily(f'n9s_{metric}_yhat_upper',
                     'YHAT Upper. The high value of uncertainty interval',
                     labels=_labels
-                )                                        
+                )
+                m_yhat_lower_diff = GaugeMetricFamily(
+                    f'n9s_{metric}_yhat_lower_diff',
+                    'Difference of yhat and yhat_lower',
+                    labels=_labels
+                )
+                m_yhat_upper_diff = GaugeMetricFamily(
+                    f'n9s_{metric}_yhat_upper_diff',
+                    'Difference of yhat_upper and yhat',
+                    labels=_labels
+                )
                 m_yhat.add_metric(_values, yhat)
                 m_yhat_lower.add_metric(_values, yhat_lower)
-                m_yhat_upper.add_metric(_values, yhat_upper)                                
+                m_yhat_upper.add_metric(_values, yhat_upper)
+                # in order to use uncertainty interval scaling (x1.5,x2 etc):
+                m_yhat_lower_diff.add_metric(_values, round(yhat-yhat_lower,4))
+                m_yhat_upper_diff.add_metric(_values, round(yhat_upper-yhat,4))
 
                 metrics.append(m_yhat)
                 metrics.append(m_yhat_lower)
                 metrics.append(m_yhat_upper)
+                metrics.append(m_yhat_lower_diff)
+                metrics.append(m_yhat_upper_diff)
 
             for m in metrics:
                 yield m
@@ -79,7 +93,7 @@ class Collector(object):
         for pair in pairs:
             k, v = pair.split('="')
             labels.append(k)
-            values.append(v)            
+            values.append(v)
 
         return labels, values
 
