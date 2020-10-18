@@ -40,10 +40,9 @@ class Worker(object):
             return
 
         self.job_ctrl.update_job(task.id, status='FETCHING', last_run='now()')
-        api_client = PrometheusClient(task.prometheus_url,
-                                      task.metric,
-                                      task.query_filter,
-                                      task.range_function,
+        api_client = PrometheusClient(task.metric_alias,
+                                      task.range_query,
+                                      task.prometheus_url,
                                       task.forecast_horizon,
                                       task.forecast_frequency)
         error, series = api_client.getSeries()

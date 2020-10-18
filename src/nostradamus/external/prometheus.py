@@ -1,3 +1,4 @@
+import re
 import time
 import json
 import logging
@@ -10,16 +11,14 @@ logger = logging.getLogger('external.prometheus')
 class Client(object):
     """ TBD """
     def __init__(self,
+                 metric_alias,
+                 range_query,
                  prometheus_url,
-                 metric,
-                 query_filter,
-                 range_function,
                  forecast_horizon,
                  forecast_frequency):
+        self.metric = metric_alias
+        self.range_query = range_query
         self.prometheus_url = prometheus_url
-        self.metric = metric
-        self.query_filter = query_filter
-        self.range_function = range_function
         self.forecast_horizon = forecast_horizon
         self.forecast_frequency = forecast_frequency
 
@@ -52,18 +51,16 @@ class Client(object):
 
         api_url = self.prometheus_url + constant.API_QUERY_ENDPOINT
 
-        if self.query_filter is not None and len(self.query_filter)>0:
-            metric = self.metric + '{' + self.query_filter + '}'
-        else:
-            metric = self.metric
-
-        payload = {"query":metric}
+        payload = {"query": self.range_query}
         error, keys = self.http_get(api_url, payload)
-        print(f'{error}: {keys}')
+
         if error == 0:
             for key in keys:
                 # remove __name__ from the list of labels
-                del key['metric']['__name__']
+                try:
+                    del key['metric']['__name__']
+                except:
+                    pass
                 values.append(key['metric'])
             return 0, values
         else:
@@ -89,10 +86,8 @@ class Client(object):
             for item in key:
                 filters = filters + f'{item}="{key[item]}",'
 
-            query = self.metric + '{' + filters + '}'
-            # apply rate/increase function to handle counters correctly
-            if self.range_function is not None:
-                query = f'{self.range_function}({query}[{self.forecast_frequency}])'
+            query = self.makeQuery(self.range_query, filters)
+            logger.debug(f'----->>>>>>> {query}')
 
             # add additional required parameters for range query
             payload = {
@@ -115,6 +110,20 @@ class Client(object):
             return 0, series
         else:
             return -1, series
+
+
+    @staticmethod
+    def makeQuery(range_query, filter):
+        """ Prepare a range query by inserting additional labels
+        in the filter statement: {} """
+        m=re.sub(pattern='}',
+            repl=','+filter+'}',
+            string=range_query,
+            count=1)
+        m.replace(',,',',')
+        m.replace('{,','{')
+        m.replace(',}','}')
+        return m
 
 
     @staticmethod
