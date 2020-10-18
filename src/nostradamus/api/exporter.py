@@ -31,7 +31,7 @@ class Collector(object):
                 return
 
             for item in forecast:
-                metric = item['metric']
+                metric = item['metric_alias']
                 yhat = item['yhat']
                 yhat_lower = item['yhat_lower']
                 yhat_upper = item['yhat_upper']

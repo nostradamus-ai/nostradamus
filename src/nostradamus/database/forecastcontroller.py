@@ -15,7 +15,7 @@ class ForecastController(object):
         """ TBD """
         data = []
         try:
-            query = "SELECT j.metric, f.metric_labels, \
+            query = "SELECT j.metric_alias, f.metric_labels, \
                     f.yhat, f.yhat_lower, f.yhat_upper \
                     FROM forecast f JOIN \
                         job j ON f.job_id = j.id \
@@ -45,3 +45,16 @@ class ForecastController(object):
             self.db_controller.insert_bulk(query, forecast)
         except Exception as error:
             logger(f'Failed to execute "save_forecast_bulk" method: {error}')
+
+
+    def cleanup(self, job_id, labels):
+        """ Clean """
+        query = "DELETE FROM forecast \
+        WHERE job_id=%(id)s AND ins_time<now() AND metric_labels=%(labels)s;"
+
+        args = {"id": job_id, "labels": labels}
+
+        try:
+            self.db_controller.delete(query, args)
+        except Exception as error:
+            logger.error(f'cleanup query failed with: {error}')

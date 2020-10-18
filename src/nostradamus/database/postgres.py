@@ -148,3 +148,22 @@ class DbController(object):
             conn.rollback()
             self.conn_pool.putconn(conn)
             return -1
+
+
+    def delete(self,
+               query,
+               args):
+        try:
+            params = args
+            conn = self.conn_pool.getconn()
+            cursor = conn.cursor()
+            cursor.execute(query, params)
+            cursor.close()
+            conn.commit()
+            self.conn_pool.putconn(conn)
+
+        except (Exception, psycopg2.Error) as error:
+            logger.error(f'Error executing DELETE query: {error}')
+            conn.rollback()
+            self.conn_pool.putconn(conn)
+            return -1

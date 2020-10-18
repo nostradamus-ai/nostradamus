@@ -85,9 +85,7 @@ class Client(object):
             filters, query = '', ''
             for item in key:
                 filters = filters + f'{item}="{key[item]}",'
-
             query = self.makeQuery(self.range_query, filters)
-            logger.debug(f'----->>>>>>> {query}')
 
             # add additional required parameters for range query
             payload = {

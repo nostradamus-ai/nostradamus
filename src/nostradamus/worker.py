@@ -29,6 +29,9 @@ class Worker(object):
                         next_run=job['next_time'],
                         last_run_duration=job['run_duration']
                     )
+                    logger.info(
+                        f'Job {job["id"]} finished with status: {job["status"]}'
+                    )
         except Exception as e:
             logger.error(f'Job cleanup failed with {e}')
 
@@ -36,9 +39,17 @@ class Worker(object):
         if (task!=-1):
             logger.debug(f'current job status: {task.status}')
         else:
-            logger.info('No active tasks')
+            logger.debug('No active tasks')
             return
 
+        logger.info(
+            f'Found a new task: job_id: {task.id}, metric: {task.metric_alias}'
+        )
+        logger.info(f'Cleaning previously fetched data')
+        # delete previously fetched data
+        self.traindata_ctrl.cleanup(task.id)
+
+        logger.info(f'Fetching new data from {task.prometheus_url}')
         self.job_ctrl.update_job(task.id, status='FETCHING', last_run='now()')
         api_client = PrometheusClient(task.metric_alias,
                                       task.range_query,
@@ -49,6 +60,7 @@ class Worker(object):
         if error == 0:
             self.traindata_ctrl.insert(task.id, series)
             self.job_ctrl.update_job(task.id, status='RUNNING')
+            logger.info(f'Running...')
         else:
             self.job_ctrl.update_job(task.id, status='ERROR')
             logger.error(f'Failed to get series from prometheus')

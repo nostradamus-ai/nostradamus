@@ -24,11 +24,11 @@ class TrainDataController(object):
             result = self.db_controller.select(query, args=None)
             if (result):
                 for row in result:
-                    resp = row                    
+                    resp = row
                     #job_id = row['job_id']
                     #data = row['data']
                 #return job_id, data
-                return 0, resp                
+                return 0, resp
             else:
                 return -1, None
 
@@ -45,9 +45,9 @@ class TrainDataController(object):
             VALUES (%s, %s, %s);"
         try:
             for s in series:
-                self.db_controller.insert(query, 
-                    job_id, 
-                    "NEW", 
+                self.db_controller.insert(query,
+                    job_id,
+                    "NEW",
                     json.dumps(s)
                 )
         except Exception as e:
@@ -71,3 +71,16 @@ class TrainDataController(object):
             self.db_controller.update(query, values)
         except Exception as e:
             logger.error(f'Failed to execute "update" method: {e}')
+
+
+    def cleanup(self, job_id):
+        """ Clean """
+        query = "DELETE FROM train_data \
+        WHERE job_id = %(id)s AND ins_time<now();"
+
+        args = {"id": job_id}
+
+        try:
+            self.db_controller.delete(query, args)
+        except Exception as error:
+            logger.error(f'cleanup query failed with: {error}')

@@ -12,7 +12,7 @@ from nostradamus.forecaster import Forecaster
 from nostradamus.database.postgres import DbController
 from nostradamus.api.exporter import Collector, MetricHandler
 
-logging.basicConfig(level=logging.DEBUG,
+logging.basicConfig(level=logging.INFO,
     format='%(asctime)s %(levelname)s [%(name)s] %(message)s')
 logger = logging.getLogger('nostradamus')
 
@@ -43,7 +43,7 @@ if __name__ == "__main__":
                       host=pg_host,
                       port=pg_port,
                       database=pg_db,
-                      pool_max_size=pg_pool)   
+                      pool_max_size=pg_pool)
     if db.ping() == 0:
         logger.info("Database connection pool initialized successfully")
 
@@ -63,12 +63,12 @@ if __name__ == "__main__":
         # Unregister default metrics
         REGISTRY.unregister(PROCESS_COLLECTOR)
         REGISTRY.unregister(PLATFORM_COLLECTOR)
-        REGISTRY.unregister(GC_COLLECTOR)  
+        REGISTRY.unregister(GC_COLLECTOR)
 
         application = tornado.web.Application([
             (r"/metrics", MetricHandler, {"ref_object": exporter})
         ])
 
         application.listen(9345)
-        logger.info("Starting Nostradamus metric exporter")        
+        logger.info("Starting Nostradamus metric exporter")
         tornado.ioloop.IOLoop.instance().start()
