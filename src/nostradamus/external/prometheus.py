@@ -114,6 +114,11 @@ class Client(object):
     def makeQuery(range_query, filter):
         """ Prepare a range query by inserting additional labels
         in the filter statement: {} """
+
+        if re.search(pattern='({.*})',string=range_query) is None:
+            query = range_query+'{'+filter+'}'
+            return query
+
         m=re.sub(pattern='}',
             repl=','+filter+'}',
             string=range_query,
