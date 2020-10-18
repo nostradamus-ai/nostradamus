@@ -26,10 +26,10 @@ class Forecaster(object):
 
         _error, _data = self.traindata_ctrl.get()
         if _error == -1:
-            logger.info('No active tasks')
+            logger.debug('No active tasks')
             return
         elif _error == -2:
-            logger.error('Failed to get tasks')
+            logger.error('Failed to get train data')
             return
 
         rec_id = _data['id']
@@ -37,6 +37,7 @@ class Forecaster(object):
         data = json.loads(_data['data'])
 
         self.traindata_ctrl.update(rec_id, status='RUNNING')
+        logger.info(f'Forecasting for job_id: {job_id} started')
 
         # get job attributes
         job = self.job_ctrl.get_job_by_id(job_id)
@@ -47,6 +48,10 @@ class Forecaster(object):
             df = pd.DataFrame.from_dict(data[item])
         df.columns = ['ds','y']
         df['ds'] = pd.to_datetime(df['ds'], unit='s')
+
+        # Delete previously generated forecast for the metric
+        logger.info(f'Cleaning up forecast for labels: {labels}')
+        self.forecast_ctrl.cleanup(job_id, labels)
 
         # create model and forecast
         model = Prophet(
@@ -77,9 +82,10 @@ class Forecaster(object):
                 status='FINISHED',
                 updated_time='now()'
             )
+            logger.info('Forecast finished successfully')
         except Exception as e:
             self.traindata_ctrl.update(rec_id,
                 status='ERROR',
                 updated_time='now()'
             )
-            logger.error(f'Save forecast failed: {e}')
+            logger.error(f'Failed to save forecast. Error: {e}')

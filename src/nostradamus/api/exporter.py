@@ -7,6 +7,8 @@ from nostradamus.database.forecastcontroller import ForecastController
 from prometheus_client import generate_latest
 from prometheus_client.core import REGISTRY, GaugeMetricFamily
 
+logger = logging.getLogger('exporter')
+
 class Collector(object):
     """ Worker class """
 
@@ -25,11 +27,11 @@ class Collector(object):
         try:
             _error, forecast = self.forecast_ctrl.get_forecast()
             if _error != 0:
-                print(f'Error get_forecast. {_error}')
+                logger.error(f'Error get_forecast. {_error}')
                 return
 
             for item in forecast:
-                metric = item['metric']
+                metric = item['metric_alias']
                 yhat = item['yhat']
                 yhat_lower = item['yhat_lower']
                 yhat_upper = item['yhat_upper']
@@ -75,7 +77,7 @@ class Collector(object):
                 yield m
 
         except Exception as e:
-            print(f'Exporter failed: {e}')
+            logger.error(f'Collect method failed with: {e}')
 
 
     @staticmethod
