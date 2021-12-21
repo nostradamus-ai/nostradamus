@@ -37,6 +37,32 @@ class TrainDataController(object):
             return -2, None
 
 
+    def get_supplemental_data(self,
+                              job_id):
+        """TBD"""
+        try:
+            query = "SELECT job_id, data \
+                FROM supplemental_train_data \
+            WHERE job_id = %(job_id)s;"
+
+            args = { 'job_id': job_id }
+            result = self.db_controller.select(query, args)
+            logger.debug(f'Query "get_supplemental_data" result: {result}')
+
+            if (result) and result!=-1:
+                for row in result:
+                    resp = row
+                return 0, resp
+            else:
+                return -1, None
+
+        except Exception as error:
+            logger.error(
+                f'Failed to execute "get_supplemental_data" method: {error}'
+            )
+            return -2, None
+
+
     def insert(self,
                job_id,
                series):

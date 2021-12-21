@@ -108,3 +108,12 @@ comment on column train_data.status is 'Status of forecasting timeseries. Availa
 comment on column train_data.created_time is 'Time when series were loaded';
 comment on column train_data.updated_time is 'Time when task was updated';
 comment on column train_data.data is 'Values of historic timeseries';
+
+create table supplemental_train_data
+(
+    job_id integer not null,
+    data text,
+    FOREIGN KEY (job_id) REFERENCES job(id)
+);
+comment on column train_data.job_id is 'Job Id';
+comment on column train_data.data is 'Values of supplemental historical timeseries';

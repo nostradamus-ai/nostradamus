@@ -36,6 +36,16 @@ class Forecaster(object):
         job_id = _data['job_id']
         data = json.loads(_data['data'])
 
+        _error, _data = self.traindata_ctrl.get_supplemental_data(job_id)
+        if _error==0:
+            if _data and len(_data)>0:
+                sup_data = json.loads(_data['data'])
+
+                for labels in data.keys():
+                    if labels in sup_data.keys():
+                        for sup_values in sup_data[labels]:
+                            data[labels].append(sup_values)
+
         self.traindata_ctrl.update(rec_id, status='RUNNING')
         logger.info(f'Forecasting for job_id: {job_id} started')
 
