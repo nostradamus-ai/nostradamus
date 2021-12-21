@@ -4,6 +4,6 @@ tornado>=6.0.3
 psycopg2-binary>=2.8.4
 numpy>=1.16.4
 pandas>=0.23.4
-pystan>=2.19.0.0
+pystan==2.19.1.1
 prometheus-client>=0.7.1
 fbprophet>=0.6
