@@ -1,6 +1,6 @@
+import os
 import re
 import time
-import json
 import logging
 import requests
 
@@ -22,6 +22,11 @@ class Client(object):
         self.forecast_horizon = forecast_horizon
         self.forecast_frequency = forecast_frequency
 
+        try:
+            self.timeout = os.environ['N9S_PS_TIMEOUT']
+        except:
+            self.timeout = 10
+
 
     def http_get(self,
                  url,
@@ -30,7 +35,7 @@ class Client(object):
         result = []
 
         try:
-            resp = requests.get(url=url, params=params, timeout=10)
+            resp = requests.get(url=url, params=params, timeout=self.timeout)
             #resp.raise_for_status()
             if resp.status_code==200:
                 resp = resp.json()
