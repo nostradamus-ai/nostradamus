@@ -23,7 +23,7 @@ class Client(object):
         self.forecast_frequency = forecast_frequency
 
         try:
-            self.timeout = os.environ['N9S_PS_TIMEOUT']
+            self.timeout = int(os.environ['N9S_PS_TIMEOUT'])
         except:
             self.timeout = 10
 
