@@ -21,7 +21,7 @@ class JobController(object):
             forecast_horizon, forecast_frequency, optimize_function, status, \
             to_char(last_run,'yyyy/mm/dd hh24:mi:ss') as last_run, \
             to_char(next_run,'yyyy/mm/dd hh24:mi:ss') as next_run, \
-            last_run_duration \
+            last_run_duration, retry_count \
             FROM job \
         WHERE id = %(id)s \
         LIMIT 1;"
@@ -42,7 +42,8 @@ class JobController(object):
                         status = row['status'],
                         last_run = row['last_run'],
                         next_run = row['next_run'],
-                        last_run_duration = row['last_run_duration']
+                        last_run_duration = row['last_run_duration'],
+                        retry_count = row['retry_count']
                     )
                 return job
             else:
@@ -58,7 +59,7 @@ class JobController(object):
             forecast_horizon, forecast_frequency, optimize_function, status, \
             to_char(last_run,'yyyy/mm/dd hh24:mi:ss') as last_run, \
             to_char(next_run,'yyyy/mm/dd hh24:mi:ss') as next_run, \
-            last_run_duration \
+            last_run_duration, retry_count \
             FROM job \
         WHERE status IN ('NEW','FINISHED') \
             AND coalesce(next_run, \
@@ -82,7 +83,8 @@ class JobController(object):
                         status = row['status'],
                         last_run = row['last_run'],
                         next_run = row['next_run'],
-                        last_run_duration = row['last_run_duration']
+                        last_run_duration = row['last_run_duration'],
+                        retry_count = row['retry_count']
                     )
                 return job
             else:
@@ -129,6 +131,26 @@ class JobController(object):
 
         except Exception as error :
             logger(f'Failed to execute "get_finished_jobs" method: {error}')
+            return -2, None
+
+
+
+    def get_broken_jobs(self):
+        """ TBD """
+        query="SELECT id, coalesce(retry_count,0) retry_count FROM job \
+        WHERE status = 'ERROR' and coalesce(retry_count,0) <= 5;"
+
+        try:
+            # Get broken job tasks
+            result = self.db_controller.select(query, args=None)
+            if (result):
+                logger.debug(f'[get_broken_jobs]: {result}')
+                return 0, result
+            else:
+                return -1, None
+
+        except Exception as error :
+            logger(f'Failed to execute "get_broken_jobs" method: {error}')
             return -2, None
 
 
