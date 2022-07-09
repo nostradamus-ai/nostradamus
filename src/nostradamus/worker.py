@@ -35,6 +35,29 @@ class Worker(object):
         except Exception as e:
             logger.error(f'Job cleanup failed with {e}')
 
+        # Schedule a restart of broken jobs
+        try:
+            _error, jobs_to_restart = self.job_ctrl.get_broken_jobs()
+            if _error == 0:
+                for job in jobs_to_restart:
+                    if job['retry_count'] >= 5:
+                        logger.info(f'Job {job["id"]} exceeded retries count')
+                        continue
+
+                    self.job_ctrl.update_job(job['id'],
+                        status='NEW',
+                        next_run="now() + interval '1' hour",
+                        error_message='null',
+                        retries_count=job['retry_count'] + 1
+                    )
+                    logger.info(
+                        f'Job {job["id"]} was set for retry'
+                    )
+        except Exception as e:
+            logger.error(f'Job retry failed with {e}')
+
+
+        # Get jobs to run
         task = self.job_ctrl.get_job()
         if (task!=-1):
             logger.debug(f'current job status: {task.status}')
