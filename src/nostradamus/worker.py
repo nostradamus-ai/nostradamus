@@ -27,7 +27,8 @@ class Worker(object):
                         status=job['status'],
                         last_run=job['updated_time'],
                         next_run=job['next_time'],
-                        last_run_duration=job['run_duration']
+                        last_run_duration=job['run_duration'],
+                        retry_count=0
                     )
                     logger.info(
                         f'Job {job["id"]} finished with status: {job["status"]}'
