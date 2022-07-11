@@ -11,7 +11,8 @@ class Job(object):
                  status,
                  last_run,
                  next_run,
-                 last_run_duration):
+                 last_run_duration,
+                 retry_count):
         self.id = id
         self.metric_alias = metric_alias
         self.range_query = range_query
@@ -23,6 +24,7 @@ class Job(object):
         self.last_run = last_run
         self.next_run = next_run
         self.last_run_duration = last_run_duration
+        self.retry_count = retry_count
 
     def validate(self):
         """ Check input parameters and fill calculated fields """
