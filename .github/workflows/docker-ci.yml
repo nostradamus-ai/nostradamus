@@ -22,12 +22,15 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
 
-      # get version from tags
+      # get version from tag
       -
         name: Get the version
         id: get_version
-        run: echo ::set-output name=VERSION::${GITHUB_REF#refs/tags/}
-
+        run: |
+          [[ ! "$GITHUB_REF" =~ refs/tags ]] && exit
+          echo "::set-output name=VERSION::${GITHUB_REF#refs/tags/}"
+        env:
+          VERSION: ${{ steps.get_version.outputs.VERSION }}
       -
         name: Checkout
         uses: actions/checkout@v2
@@ -48,4 +51,4 @@ jobs:
           platforms: linux/amd64,linux/arm64
           file: ./Dockerfile
           push: true
-          tags: nostradamusai/nostradamus:${{ steps.get_version.outputs.VERSION }}
+          tags: nostradamusai/nostradamus:$VERSION
