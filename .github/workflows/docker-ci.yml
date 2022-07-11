@@ -6,11 +6,8 @@ name: CI
 on:
   # Triggers the workflow on push or pull request events but only for the main branch
   push:
-    branches:
-      - 'main'
-      - 'releases/**'
     tags:
-      - 'v*'
+      - 'v*.*.*'
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -26,11 +23,7 @@ jobs:
       -
         name: Get the version
         id: get_version
-        run: |
-          [[ ! "$GITHUB_REF" =~ refs/tags ]] && exit
-          echo "::set-output name=VERSION::${GITHUB_REF#refs/tags/}"
-        env:
-          VERSION: ${{ steps.get_version.outputs.VERSION }}
+        run: echo ::set-output name=VERSION::${GITHUB_REF#refs/tags/}
       -
         name: Checkout
         uses: actions/checkout@v2
@@ -51,4 +44,4 @@ jobs:
           platforms: linux/amd64,linux/arm64
           file: ./Dockerfile
           push: true
-          tags: nostradamusai/nostradamus:$VERSION
+          tags: nostradamusai/nostradamus:${{ steps.get_version.outputs.VERSION }}
