@@ -137,7 +137,9 @@ class JobController(object):
 
     def get_broken_jobs(self):
         """ TBD """
-        query="SELECT id, coalesce(retry_count,0) retry_count FROM job \
+        query="SELECT id, coalesce(retry_count,0) retry_count, \
+          to_char(last_run + interval '1' hour, 'yyyy/mm/dd hh24:mi:ss') as next_run \
+        FROM job \
         WHERE status = 'ERROR' and coalesce(retry_count,0) <= 5;"
 
         try:

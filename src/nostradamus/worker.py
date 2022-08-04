@@ -47,8 +47,7 @@ class Worker(object):
 
                     self.job_ctrl.update_job(job['id'],
                         status='NEW',
-                        next_run="now() + interval '1' hour",
-                        error_message='null',
+                        next_run=job['next_run'],
                         retries_count=job['retry_count'] + 1
                     )
                     logger.info(
