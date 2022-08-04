@@ -2,18 +2,14 @@ name: CI
 
 on:
   push:
-    tags:
-      - v0.**
+    branches:
+      - 'base'
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      -
-        name: Get the version
-        id: get_version
-        run: echo ::set-output name=VERSION::${GITHUB_REF#refs/tags/}
       -
         name: Checkout
         uses: actions/checkout@v3
@@ -37,4 +33,4 @@ jobs:
           platforms: linux/amd64,linux/arm64
           file: ./Dockerfile
           push: true
-          tags: nostradamusai/nostradamus:${{ steps.get_version.outputs.VERSION }}
+          tags: nostradamusai/nostradamus:base
