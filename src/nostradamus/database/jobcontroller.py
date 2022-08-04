@@ -140,7 +140,7 @@ class JobController(object):
         query="SELECT id, coalesce(retry_count,0) retry_count, \
           to_char(now() + interval '1' hour, 'yyyy/mm/dd hh24:mi:ss') as next_run \
         FROM job \
-        WHERE status = 'ERROR' and coalesce(retry_count,0) <= 5;"
+        WHERE status = 'ERROR' and coalesce(retry_count,0) < 5;"
 
         try:
             # Get broken job tasks
