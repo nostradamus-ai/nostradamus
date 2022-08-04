@@ -48,7 +48,7 @@ class Worker(object):
                     self.job_ctrl.update_job(job['id'],
                         status='NEW',
                         next_run=job['next_run'],
-                        retries_count=job['retry_count'] + 1
+                        retry_count=job['retry_count'] + 1
                     )
                     logger.info(
                         f'Job {job["id"]} was set for retry'
